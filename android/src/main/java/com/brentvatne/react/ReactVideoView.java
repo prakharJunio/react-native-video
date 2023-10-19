@@ -44,14 +44,14 @@ import javax.annotation.Nullable;
 
 @SuppressLint("ViewConstructor")
 public class ReactVideoView extends ScalableVideoView implements
-    MediaPlayer.OnPreparedListener,
-    MediaPlayer.OnErrorListener,
-    MediaPlayer.OnBufferingUpdateListener,
-    MediaPlayer.OnSeekCompleteListener,
-    MediaPlayer.OnCompletionListener,
-    MediaPlayer.OnInfoListener,
-    LifecycleEventListener,
-    MediaController.MediaPlayerControl {
+        MediaPlayer.OnPreparedListener,
+        MediaPlayer.OnErrorListener,
+        MediaPlayer.OnBufferingUpdateListener,
+        MediaPlayer.OnSeekCompleteListener,
+        MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnInfoListener,
+        LifecycleEventListener,
+        MediaController.MediaPlayerControl {
 
     public enum Events {
         EVENT_LOAD_START("onVideoLoadStart"),
@@ -146,12 +146,14 @@ public class ReactVideoView extends ScalableVideoView implements
 
     public ReactVideoView(ThemedReactContext themedReactContext) {
         super(themedReactContext);
+        super().disableResetOnDetach();
 
         mThemedReactContext = themedReactContext;
         mEventEmitter = themedReactContext.getJSModule(RCTEventEmitter.class);
         themedReactContext.addLifecycleEventListener(this);
 
         initializeMediaPlayerIfNeeded();
+
         setSurfaceTextureListener(this);
 
         mProgressUpdateRunnable = new Runnable() {
@@ -231,10 +233,10 @@ public class ReactVideoView extends ScalableVideoView implements
     }
 
     public void cleanupMediaPlayerResources() {
-        if ( mediaController != null ) {
+        if (mediaController != null) {
             mediaController.hide();
         }
-        if ( mMediaPlayer != null ) {
+        if (mMediaPlayer != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 mMediaPlayer.setOnTimedMetaDataAvailableListener(null);
             }
@@ -306,35 +308,34 @@ public class ReactVideoView extends ScalableVideoView implements
                     setDataSource(uriString);
                 }
             } else {
-                ZipResourceFile expansionFile= null;
-                AssetFileDescriptor fd= null;
-                if(mMainVer>0) {
+                ZipResourceFile expansionFile = null;
+                AssetFileDescriptor fd = null;
+                if (mMainVer > 0) {
                     try {
                         expansionFile = APKExpansionSupport.getAPKExpansionZipFile(mThemedReactContext, mMainVer, mPatchVer);
-                        fd = expansionFile.getAssetFileDescriptor(uriString.replace(".mp4","") + ".mp4");
+                        fd = expansionFile.getAssetFileDescriptor(uriString.replace(".mp4", "") + ".mp4");
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (NullPointerException e) {
                         e.printStackTrace();
                     }
                 }
-                if(fd==null) {
+                if (fd == null) {
                     int identifier = mThemedReactContext.getResources().getIdentifier(
-                        uriString,
-                        "drawable",
-                        mThemedReactContext.getPackageName()
+                            uriString,
+                            "drawable",
+                            mThemedReactContext.getPackageName()
                     );
                     if (identifier == 0) {
                         identifier = mThemedReactContext.getResources().getIdentifier(
-                            uriString,
-                            "raw",
-                            mThemedReactContext.getPackageName()
+                                uriString,
+                                "raw",
+                                mThemedReactContext.getPackageName()
                         );
                     }
                     setRawData(identifier);
-                }
-                else {
-                    setDataSource(fd.getFileDescriptor(), fd.getStartOffset(),fd.getLength());
+                } else {
+                    setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
                 }
             }
         } catch (Exception e) {
@@ -351,9 +352,9 @@ public class ReactVideoView extends ScalableVideoView implements
         src.putString(ReactVideoViewManager.PROP_SRC_TYPE, type);
         src.putMap(ReactVideoViewManager.PROP_SRC_HEADERS, wRequestHeaders);
         src.putBoolean(ReactVideoViewManager.PROP_SRC_IS_NETWORK, isNetwork);
-        if(mMainVer>0) {
+        if (mMainVer > 0) {
             src.putInt(ReactVideoViewManager.PROP_SRC_MAINVER, mMainVer);
-            if(mPatchVer>0) {
+            if (mPatchVer > 0) {
                 src.putInt(ReactVideoViewManager.PROP_SRC_PATCHVER, mPatchVer);
             }
         }
@@ -363,9 +364,9 @@ public class ReactVideoView extends ScalableVideoView implements
         isCompleted = false;
 
         try {
-          prepareAsync(this);
+            prepareAsync(this);
         } catch (Exception e) {
-          e.printStackTrace();
+            e.printStackTrace();
         }
     }
 
@@ -402,7 +403,7 @@ public class ReactVideoView extends ScalableVideoView implements
             if (!mMediaPlayer.isPlaying()) {
                 start();
                 // Setting the rate unpauses, so we have to wait for an unpause
-                if (mRate != mActiveRate) { 
+                if (mRate != mActiveRate) {
                     setRateModifier(mRate);
                 }
 
@@ -677,17 +678,16 @@ public class ReactVideoView extends ScalableVideoView implements
             setKeepScreenOn(false);
         }
     }
-        
+
     // This is not fully tested and does not work for all forms of timed metadata
     @TargetApi(23) // 6.0
     public class TimedMetaDataAvailableListener
-            implements MediaPlayer.OnTimedMetaDataAvailableListener
-    {
+            implements MediaPlayer.OnTimedMetaDataAvailableListener {
         public void onTimedMetaDataAvailable(MediaPlayer mp, TimedMetaData data) {
             WritableMap event = Arguments.createMap();
 
             try {
-                String rawMeta  = new String(data.getMetaData(), "UTF-8");
+                String rawMeta = new String(data.getMetaData(), "UTF-8");
                 WritableMap id3 = Arguments.createMap();
 
                 id3.putString(EVENT_PROP_METADATA_VALUE, rawMeta.substring(rawMeta.lastIndexOf("\u0003") + 1));
@@ -718,10 +718,9 @@ public class ReactVideoView extends ScalableVideoView implements
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        if(mMainVer>0) {
+        if (mMainVer > 0) {
             setSrc(mSrcUriString, mSrcType, mSrcIsNetwork, mSrcIsAsset, mRequestHeaders, mMainVer, mPatchVer);
-        }
-        else {
+        } else {
             setSrc(mSrcUriString, mSrcType, mSrcIsNetwork, mSrcIsAsset, mRequestHeaders);
         }
         setKeepScreenOn(mPreventsDisplaySleepDuringVideoPlayback);
@@ -777,7 +776,7 @@ public class ReactVideoView extends ScalableVideoView implements
 
         return result;
     }
-        
+
     // Select track (so we can use it to listen to timed meta data updates)
     private void selectTimedMetadataTrack(MediaPlayer mp) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -791,6 +790,7 @@ public class ReactVideoView extends ScalableVideoView implements
                     break;
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
     }
 }
